@@ -86,6 +86,10 @@ button{font-family:inherit}
 .pill.live .dot{background:var(--acc);box-shadow:0 0 0 4px var(--acc-soft);animation:blink 1.6s ease-in-out infinite}
 @keyframes blink{50%{opacity:.35}}
 @media (max-width:900px){.nav .wrap{height:auto;flex-wrap:wrap;padding:12px 16px;gap:10px}.menu{order:3;width:100%;margin-left:0;overflow-x:auto}.clock{margin-left:auto}.logo .sub{display:none}}
+/* 메뉴가 좁아지면 글자를 한 자씩 줄바꿈하지 말고 옆으로 밀어 보기(10/15 '타이머' 탭 추가로 휴대폰에서 타/이/머 세 줄이 됨) */
+.menu{min-width:0;overflow-x:auto;scrollbar-width:none}.menu::-webkit-scrollbar{display:none}
+.menu a{flex-shrink:0;white-space:nowrap}
+.logo,.clock{white-space:nowrap;flex-shrink:0}
 
 /* hero */
 .hero{position:relative;padding:96px 0 64px;overflow:hidden}
@@ -313,6 +317,82 @@ button{font-family:inherit}
 .rank-order span{font-family:var(--disp);width:46px;height:46px;border:1px solid var(--line2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--mute);font-size:16px}
 .rank-order span.done{border-color:var(--acc);color:var(--acc)}
 .rank-order span.now{background:var(--acc);border-color:var(--acc);color:#0b0b0c}
+
+/* ───────── BIG SCREEN (#/screen) — 행사장 큰 화면: 위 카운트다운, 아래 출품작 띠 ───────── */
+#screen{position:fixed;inset:0;z-index:95;background:#050506;color:var(--fg);overflow:hidden;display:none;flex-direction:column;user-select:none}
+#screen.open{display:flex}
+#screen.idle{cursor:none}
+.sc-bg{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 50% 24%,rgba(237,109,32,.17),rgba(237,109,32,.04) 45%,transparent 72%)}
+.sc-top,.sc-head,.sc-hz,.sc-hall{position:relative}
+.sc-top{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:2.4vh 2.6vw 0;font-family:var(--disp);letter-spacing:.2em;font-size:clamp(11px,.9vw,17px);color:var(--mute);text-transform:uppercase}
+.sc-top b{color:var(--fg2);font-weight:600}
+.sc-top .r{display:flex;align-items:center;gap:1.4vw}
+.sc-clock{color:var(--fg2);font-variant-numeric:tabular-nums;letter-spacing:.12em}
+.sc-live{display:inline-flex;align-items:center;gap:8px;color:var(--acc)}
+.sc-live i{width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);animation:pulse 1.6s ease-in-out infinite}
+.sc-head{flex:0 0 auto;text-align:center;padding:4.2vh 4vw 0}
+.sc-label{font-family:var(--disp);letter-spacing:.34em;color:var(--acc);font-size:clamp(14px,1.5vw,30px);text-transform:uppercase;font-weight:600}
+.sc-cd{font-family:var(--disp);font-weight:600;font-size:min(24vh,17vw);line-height:.95;letter-spacing:0;margin-top:1.6vh;color:var(--fg);transition:color .6s;white-space:nowrap}
+.sc-cd .n{display:inline-block;width:.58em;text-align:center} /* 가장 넓은 숫자 0(0.553em)보다 조금 넓은 고정 칸 */
+.sc-cd .c{display:inline-block;width:.3em;text-align:center;opacity:.35;position:relative;top:-.06em}
+.sc-cd .d{font-size:.4em;color:var(--fg2);margin-right:.35em;vertical-align:.6em;letter-spacing:.04em}
+.sc-cd.warn{color:var(--acc2);text-shadow:0 0 60px rgba(237,109,32,.35)}
+.sc-cd.final{color:var(--acc);text-shadow:0 0 80px rgba(237,109,32,.55);animation:pulse 1s ease-in-out infinite}
+.sc-end{font-size:min(15vh,11vw);font-weight:800;letter-spacing:-.045em;line-height:1;margin-top:2.4vh}
+.sc-sub{font-size:clamp(15px,1.55vw,30px);color:var(--fg2);margin-top:2.2vh;letter-spacing:-.01em}
+.sc-sub b{color:var(--fg);font-family:var(--disp);font-weight:600;font-size:1.15em;letter-spacing:.02em}
+.sc-sub.hot{color:var(--acc2);font-weight:700}
+.sc-bar{position:relative;width:min(1300px,76vw);margin:3.2vh auto 0;height:3px;background:rgba(255,255,255,.09);border-radius:2px}
+.sc-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,rgba(237,109,32,.35),var(--acc) 70%,var(--peach));box-shadow:0 0 16px rgba(237,109,32,.55)}
+.sc-bar i::after{content:'';position:absolute;right:-5px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--peach);box-shadow:0 0 14px 3px rgba(237,109,32,.8)}
+.sc-bar span{position:absolute;top:12px;font-family:var(--disp);font-size:clamp(11px,.8vw,15px);color:var(--mute);letter-spacing:.14em}
+.sc-hz{flex:0 0 auto;height:1px;margin-top:5vh;background:linear-gradient(90deg,transparent 4%,rgba(255,217,189,.55) 50%,transparent 96%);box-shadow:0 0 30px 3px rgba(237,109,32,.25)}
+.sc-hall{flex:1;min-height:0;display:flex;flex-direction:column;padding:2.6vh 0 4.2vh}
+.sc-hall-head{display:flex;justify-content:space-between;align-items:baseline;padding:0 2.6vw 2.2vh;font-family:var(--disp);letter-spacing:.2em;font-size:clamp(11px,.9vw,17px);color:var(--mute);text-transform:uppercase}
+.sc-hall-head .ko{font-family:var(--body);letter-spacing:0;color:var(--fg2);font-weight:700;margin-left:.7em;text-transform:none}
+.sc-hall-head b{color:var(--fg);font-weight:600;font-size:1.5em;letter-spacing:.04em;margin:0 .25em 0 .9em}
+.sc-rows{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+.sc-row{overflow:hidden;flex:0 0 auto}
+.sc-row.static .sc-track{margin:0 auto}
+.sc-track{display:flex;width:max-content;will-change:transform}
+.sc-card{flex:0 0 auto;width:var(--cw);margin:0 calc(var(--g) / 2);background:var(--card);border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.sc-thumb{position:relative;aspect-ratio:16/9;background:radial-gradient(ellipse at 30% 20%,rgba(237,109,32,.16),transparent 60%),linear-gradient(135deg,#1d1d21,#111113);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.sc-thumb .ic{font-size:calc(var(--cw) * .12);color:rgba(237,109,32,.6)}
+.sc-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
+.sc-thumb img.ok{opacity:1}
+.sc-play{position:absolute;right:calc(var(--cw) * .03);bottom:calc(var(--cw) * .03);width:calc(var(--cw) * .085);height:calc(var(--cw) * .085);border-radius:50%;background:rgba(5,5,6,.7);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cw) * .032);color:var(--fg)}
+.sc-new{position:absolute;left:calc(var(--cw) * .03);top:calc(var(--cw) * .03);font-size:calc(var(--cw) * .03)!important}
+.sc-meta{padding:calc(var(--cw) * .042) calc(var(--cw) * .05) calc(var(--cw) * .046)}
+.sc-meta .t{font-weight:800;font-size:calc(var(--cw) * .054);line-height:1.32;letter-spacing:-.02em;height:2.64em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sc-meta .w{display:flex;align-items:center;gap:calc(var(--cw) * .025);margin-top:calc(var(--cw) * .028);font-size:calc(var(--cw) * .04);color:var(--fg2);white-space:nowrap;overflow:hidden}
+.sc-meta .w .tag{font-size:calc(var(--cw) * .03)}
+.sc-empty{text-align:center;color:var(--mute);font-size:clamp(16px,1.6vw,30px)}
+.sc-flash{position:absolute;left:50%;top:2vh;z-index:4;transform:translate(-50%,-160%);opacity:0;transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .5s;display:flex;align-items:center;gap:12px;background:rgba(23,23,26,.94);border:1px solid var(--acc);border-radius:999px;padding:10px 24px 10px 12px;font-size:clamp(14px,1.15vw,22px);white-space:nowrap;max-width:70vw;box-shadow:0 10px 50px rgba(237,109,32,.25)}
+.sc-flash.on{transform:translate(-50%,0);opacity:1}
+.sc-flash em{font-style:normal;color:var(--fg2);overflow:hidden;text-overflow:ellipsis}
+.sc-ctl{position:absolute;right:2.6vw;bottom:1.4vh;z-index:3;display:flex;gap:8px;transition:opacity .4s}
+#screen.idle .sc-ctl{opacity:0;pointer-events:none}
+.sc-ctl button{background:rgba(5,5,6,.6);border:1px solid var(--line2);color:var(--mute);border-radius:4px;padding:6px 10px;font-size:11px;letter-spacing:.14em;font-family:var(--disp);cursor:pointer}
+.sc-ctl button:hover{color:var(--fg);border-color:var(--fg)}
+.sc-note{position:absolute;left:2.6vw;bottom:1.4vh;font-size:11px;color:#57534d;letter-spacing:.04em}
+.sc-note.bad{color:var(--warn)}
+@media (max-width:700px){
+  .sc-top{flex-wrap:wrap;gap:6px 12px;padding:14px 16px 0;font-size:10px;letter-spacing:.14em}
+  .sc-head{padding:5vh 16px 0}
+  .sc-label{letter-spacing:.2em;font-size:13px}
+  .sc-cd{font-size:min(24vh,19vw)}
+  .sc-sub{font-size:14px}
+  .sc-bar{width:calc(100vw - 32px)}
+  .sc-hall-head{padding:0 16px 14px;font-size:10px}
+  .sc-hall-head .ko{display:none}
+  .sc-flash{top:10px;max-width:calc(100vw - 24px);font-size:13px;padding:8px 16px 8px 10px;gap:8px}
+  .sc-ctl{right:16px}
+  .sc-note{left:16px}
+  .sc-meta .w{font-size:max(11px,calc(var(--cw) * .04))}
+  .sc-meta .w .tag{font-size:max(10px,calc(var(--cw) * .03))}
+}
+/* 휴대폰 가로(높이 500 이하): 띠가 들어갈 자리가 없어 글자가 안 읽힘 → 카운트다운만 */
+@media (max-height:500px){ .sc-hz,.sc-hall{display:none} .sc-head{flex:1;display:flex;flex-direction:column;justify-content:center;padding-top:0;padding-bottom:4vh} }
 </style>
 </head>
 <body>
@@ -351,6 +431,8 @@ button{font-family:inherit}
   <div class="hint" id="awHint"><span><kbd>SPACE</kbd> / <kbd>→</kbd> 다음</span><span><kbd>←</kbd> 이전</span><span><kbd>1-9</kbd> 미디어</span><span><kbd>F</kbd> 전체화면</span><span><kbd>HOME</kbd> 처음부터</span><span><kbd>ESC</kbd> 나가기</span></div>
   <div class="progress" id="awProg" style="width:0"></div>
 </div>
+
+<div id="screen" aria-label="큰 화면"></div>
 
 <div id="toast"></div>
 <div id="modalRoot"></div>
@@ -741,7 +823,7 @@ async function refresh(silent, rerender) {
       const st = isJudge() ? await API.get('admin_state', { key: S.admin }, { onRetry }) : await API.get('state', {}, { onRetry });
       // 서버 시각 보정: 응답이 느릴수록 st.now 는 과거값이 되므로 왕복 시간의 절반을 빼고 맞춘다(실측: 11초 걸린 응답에서 10.8초 어긋남). 8초 넘게 걸린 응답은 첫 동기화가 아니면 이전 보정값 유지
       const rtt = Date.now() - t0; if (rtt < 8000 || !S.syncedOnce) { serverOffset = st.now - (Date.now() - rtt / 2); S.syncedOnce = true; }
-      S.st = st; S.err = null; S.fromCache = false;
+      S.st = st; S.err = null; S.fromCache = false; S.lastOk = Date.now();
       if (isJudge()) { S.adminSt = st; if (st.role) { S.role = st.role; rememberRole(S.admin, st.role); } }
       saveStateCache(st);
     } catch (e) {
@@ -755,7 +837,7 @@ async function refresh(silent, rerender) {
     const phaseChanged = S.st && prevPhase !== S.st.phase;
     // 18:00 마감 순간, 작성 중이던 제출 폼은 "마감" 안내로 갈아치우지 않는다 (서버가 10분간 조용히 받아 주므로 그대로 제출 가능)
     if (phaseChanged && prevPhase === 'submit' && route() === 'submit' && submitInProgress()) return;
-    if (!silent || rerender || phaseChanged || route() === 'home' || route() === 'gallery' || !prevPhase) render();
+    if (!silent || rerender || phaseChanged || route() === 'home' || route() === 'gallery' || route() === 'screen' || !prevPhase) render();
   })();
   try { await S.inflight; } finally { S.inflight = null; }
 }
@@ -785,6 +867,7 @@ setInterval(tick, 1000);
 function tick() {
   $('#clock').textContent = kstTime(now()) + ' KST';
   $$('[data-cd]').forEach(el => { const t = Number(el.dataset.cd); el.textContent = countdownStr(t - now()); });
+  if (SC.open) scTick();
   const local = phaseByTime(now());
   // 타임라인 경계를 지나면 서버 상태 재조회 — 전원이 같은 초에 몰리지 않게 0~15초 무작위 지연 (10초 스로틀)
   if (S.st && S.st.config.phaseOverride === 'auto' && S.st.phase !== local && !S.boundaryTimer && Date.now() - (S.lastRefresh || 0) > 10000 && !(typeof AW !== 'undefined' && AW.open)) {
@@ -793,7 +876,7 @@ function tick() {
 }
 
 /* ═══════════════ 라우터 ═══════════════ */
-const ROUTES = { '': 'home', home: 'home', gallery: 'gallery', submit: 'submit', impact: 'impact', vote: 'vote', admin: 'admin', ceo: 'ceo', award: 'award' };
+const ROUTES = { '': 'home', home: 'home', gallery: 'gallery', submit: 'submit', impact: 'impact', vote: 'vote', admin: 'admin', ceo: 'ceo', award: 'award', screen: 'screen' };
 function route() { const h = location.hash.replace(/^#\/?/, '').split('?')[0]; return ROUTES[h] || 'home'; }
 window.addEventListener('hashchange', () => {
   // 시상식 진행 중 뒤로가기·주소 변경으로 무대가 사라지지 않도록 주소를 되돌림
@@ -803,7 +886,7 @@ window.addEventListener('hashchange', () => {
 function renderNav() {
   const r = route(); const p = phase();
   // 참가자 메뉴에는 관리 화면을 두지 않는다 (푸터의 작은 링크로만). 로그인한 역할에 맞는 메뉴만 추가
-  const items = [['home', '홈', true], ['gallery', '전시회장', true], ['submit', '출품', canAccess('submit')], ['impact', '임팩트', canAccess('impact')], ['vote', '투표', canAccess('vote')], ['award', '시상식', canAccess('award')]];
+  const items = [['home', '홈', true], ['gallery', '전시회장', true], ['screen', '타이머', true], ['submit', '출품', canAccess('submit')], ['impact', '임팩트', canAccess('impact')], ['vote', '투표', canAccess('vote')], ['award', '시상식', canAccess('award')]];
   if (isJudge()) items.push(['ceo', '대표 평가 ●', true]);
   if (isAdmin()) items.push(['admin', '운영 ●', true]);
   $('#menu').innerHTML = items.map(([k, l, ok]) => '<a href="#/' + k + '" class="' + (r === k ? 'on' : '') + '">' + esc(l) + (ok ? '' : ' <i class="fa-solid fa-lock lock"></i>') + '</a>').join('');
@@ -814,6 +897,14 @@ function renderNav() {
 }
 function render() {
   const v = route(); const el = $('#view');
+  if (v === 'screen') { openScreen(); scRender(); return; }
+  if (SC.open) {
+    // 타이머를 닫고 들어오기 전 화면으로 돌아갈 때는 그 화면을 다시 그리지 않음 — 다시 그리면 쓰던 제출·임팩트 입력이 지워짐(타이머는 #view 를 건드리지 않고 위에 덮이기만 함).
+    // 홈·전시회장은 최신 출품을 보이도록 다시 그리고, 타이머를 보는 사이 단계가 바뀌었으면 다시 그림
+    const keep = SC.keepView && v === SC.back && phase() === SC.phaseAtOpen && v !== 'home' && v !== 'gallery';
+    closeScreen(); if (keep) return;
+  }
+  S.shownRoute = v; // #view 에 지금 깔려 있는 화면 (타이머 EXIT 가 돌아갈 곳)
   if (v === 'award') {
     openAward();
     // 결과 집계(Apps Script 호출)에 몇 초 걸리는 동안 잠금 화면 대신 준비 중 화면을 보여줌
@@ -967,7 +1058,8 @@ let draftTimer = null;
 function readDraft() { try { const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); return d && Date.now() - d.ts < DRAFT_MAX_AGE ? d : null; } catch (e) { return null; } }
 function draftHasContent(d) { return !!d && !!((d.name || '').trim() || (d.title || '').trim() || (d.aiUsage || '').trim() || (d.link || '').trim() || (d.files || []).length); }
 function saveDraft() {
-  if (UP.editing || UP.mode !== 'new' || route() !== 'submit') return;
+  const r = route(); // 타이머가 제출 화면 위에 덮여 있을 때도 저장(입력·업로드 완료가 타이머 보는 사이에 일어나도 초안에 남게)
+  if (UP.editing || UP.mode !== 'new' || !(r === 'submit' || (r === 'screen' && S.shownRoute === 'submit'))) return;
   const g = id => { const el = $(id); return el ? el.value : ''; };
   const d = { ts: Date.now(), clientId: draftClientId(), name: g('#fName'), dept: g('#fDept'), title: g('#fTitle'), aiUsage: g('#fAi'), link: g('#fLink'), files: doneFiles(UL.sub) };
   try { if (draftHasContent(d)) localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); else localStorage.removeItem(DRAFT_KEY); } catch (e) { }
@@ -1396,13 +1488,24 @@ function adminConfigHTML(st) {
     + '<div class="card" style="padding:24px"><div class="k" style="margin-bottom:14px">1인 투표 수 (n표)</div><p class="mute" style="font-size:13px;margin:0 0 14px">최대 선택 가능 개수. 해커톤 이전에 확정해 공지하세요.</p><input class="input num" type="number" min="1" max="20" id="cfVotes" value="' + c.votesPerPerson + '" style="font-size:22px;max-width:160px"></div>'
     + '<div class="card" style="padding:24px"><div class="k" style="margin-bottom:14px">결과 공개</div><p class="mute" style="font-size:13px;margin:0 0 14px">켜면 참가자 화면에도 순위 · 득표가 보이고, 시상식 페이지가 관리자 로그인 없이 열립니다. <b>시상식 발표가 끝난 뒤</b> 켜는 것을 권장합니다.</p><label style="display:flex;gap:10px;align-items:center;font-size:14px;cursor:pointer"><input type="checkbox" id="cfPublic" ' + (c.resultsPublic ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--acc)"> 결과 공개</label></div>'
     + '<div class="card" style="padding:24px"><div class="k" style="margin-bottom:14px">공지 문구 (홈 상단)</div><textarea class="textarea" id="cfNotice" style="min-height:90px" placeholder="예) 서포터 문의는 #ax-hackathon 채널로">' + esc(c.notice || '') + '</textarea></div>'
-    + '</div><div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;align-items:center"><button class="btn" onclick="saveConfig()">설정 저장</button><button class="btn danger sm" onclick="resetVotes()">투표 전체 초기화 (리허설 후)</button>' + '' + '</div>'
+    + '</div><div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;align-items:center"><button class="btn" onclick="saveConfig()">설정 저장</button><button class="btn danger sm" onclick="resetVotes()">투표 전체 초기화</button><button class="btn danger sm" onclick="resetAll()"><i class="fa-solid fa-broom"></i> 리허설 데이터 전체 초기화</button><button class="btn sm ghost" onclick="window.open(\'#/screen\',\'_blank\')"><i class="fa-solid fa-tv"></i> 큰 화면 열기</button>' + '' + '</div>'
     + '<div class="card" style="padding:20px;margin-top:24px;font-size:13px;color:var(--fg2)"><div class="k" style="margin-bottom:10px">타임라인 (KST)</div>' + [['제출', 'submitStart', 'submitEnd'], ['임팩트 기입', 'impactStart', 'voteStart'], ['평가 · 투표', 'voteStart', 'voteEnd'], ['시상식', 'awardStart', 'awardEnd']].map(([l, a, b]) => '<div style="display:flex;gap:14px;padding:6px 0;border-bottom:1px solid var(--line)"><span style="width:100px;color:var(--fg)">' + l + '</span><span class="num">' + kstFmt(T[a]) + ' → ' + kstFmt(T[b]) + '</span></div>').join('') + '<p class="hint">변경은 index.html 의 SCHEDULE 과 code.gs 의 CONFIG.SCHEDULE 을 함께 수정하세요.</p></div>';
 }
 async function saveConfig() {
   try { await API.post({ action: 'admin_config', key: S.admin, phaseOverride: $('#cfPhase').value, votesPerPerson: +$('#cfVotes').value, resultsPublic: $('#cfPublic').checked, notice: $('#cfNotice').value }); toast('설정 저장', 'ok'); await refresh(true, true); } catch (e) { toast(e.message, 'bad'); }
 }
 async function resetVotes() { if (!confirm('모든 투표 기록을 삭제합니다. 리허설 데이터 정리용입니다. 계속할까요?')) return; try { await API.post({ action: 'admin_reset_votes', key: S.admin }); toast('투표 초기화', 'ok'); await refresh(true, true); } catch (e) { toast(e.message, 'bad'); } }
+/* 본 행사 시작 전 리허설 데이터 전체 삭제 — 두 번 확인(확인창 + RESET 입력). Drive 파일은 별도 */
+async function resetAll() {
+  if (!confirm('출품작 · 투표 · 투표자 PIN · 대표 점수 · 업로드 기록 · 로그를 모두 삭제하고, 단계를 자동 · 결과를 비공개로 되돌립니다.\nDrive 의 파일은 지워지지 않습니다. 본 행사 시작 전 리허설 데이터 정리용입니다. 계속할까요?')) return;
+  if (prompt('정말 삭제하려면 RESET 을 입력하세요') !== 'RESET') return toast('취소했습니다');
+  showWait('리허설 데이터를 지우는 중', 10000);
+  try {
+    const r = await API.post({ action: 'admin_reset_all', key: S.admin, confirm: 'RESET' });
+    await hideWait(true); toast('초기화 완료 · ' + Object.entries(r.removed || {}).map(([k, v]) => k + ' ' + v + '행').join(', '), 'ok');
+    CE.sel = null; await refresh(true, true);
+  } catch (e) { await hideWait(false); toast(e.message, 'bad'); }
+}
 function adminAwardHTML(st) {
   const R = st.results || computeResultsLocal(st.entries, st.votes || [], st.scores || []);
   const eligible = st.entries.filter(e => e.status !== 'excluded');
@@ -1417,6 +1520,205 @@ function adminAwardHTML(st) {
     + '<p class="mute" style="font-size:13px;margin:16px 0 0">발표용 노트북에서 이 계정으로 로그인한 뒤 아래 버튼으로 전체화면 시상식을 시작하세요. 진행: <b>SPACE</b> 다음 · <b>←</b> 이전 · <b>F</b> 전체화면 · <b>ESC</b> 종료. 5위 → 1위 순으로 공개되며 각 수상자 화면에서 산출물 미디어가 재생됩니다.</p>'
     + '<div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap"><button class="btn" onclick="location.hash=\'#/award\'"><i class="fa-solid fa-trophy"></i> 시상식 열기</button><button class="btn ghost" onclick="AD.tab=\'status\';render()">결과 표 확인</button></div></div>'
     + '<div class="card" style="padding:26px"><div class="k" style="margin-bottom:14px">현재 순위 (공개 전 · 관리자만)</div>' + (top.length ? top.map(r => '<div style="display:flex;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)"><span class="num" style="font-size:26px;color:var(--acc);width:34px;font-weight:600">' + r.rank + '</span><div style="flex:1;min-width:0"><b>' + esc(r.name) + '</b> <span class="mute" style="font-size:12px">' + esc(r.dept) + '</span><div style="font-size:13px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.title) + '</div></div><span class="num" style="font-weight:700">' + r.total + '</span></div>').join('') : '<p class="mute">출품작 없음</p>') + '</div></div><style>@media(max-width:860px){.aw2{grid-template-columns:1fr!important}}</style>';
+}
+
+/* ═══════════════ BIG SCREEN (#/screen) ═══════════════
+   10/21 행사장 큰 화면용. 위: 지금 단계의 마감(시작) 카운트다운 + 제출 시간 진행 막대, 아래: 출품작 카드가 옆으로 흐르는 띠(한 줄, 최신 작품부터).
+   데이터는 일반 화면과 같은 공개 상태 조회(90초 주기)를 쓴다 — 서버 부하 추가 없음. 새 출품이 들어오면 위에 "NEW" 배너 7초.
+   띠는 requestAnimationFrame 으로 직접 움직여, 출품이 늘어 카드를 다시 그려도 흐르던 위치를 이어 간다(CSS 애니메이션은 처음으로 튐) */
+const SC = { open: false, sig: '', rows: [], raf: 0, last: 0, seen: null, loaded: new Set(), mode: '', lastMove: 0, wake: null, flashT: 0, rzT: 0 };
+const SC_CD = { // 단계 → [위 문구, 카운트다운 목표]
+  before: ['HACKATHON STARTS IN', 'submitStart'],
+  submit: ['SUBMISSION CLOSES IN', 'submitEnd'],
+  impact: ['IMPACT ENTRY CLOSES IN', 'voteStart'],
+  vote: ['VOTING CLOSES IN', 'voteEnd'],
+  judging: ['AWARD CEREMONY IN', 'awardStart']
+};
+function openScreen() {
+  if (SC.open) return;
+  SC.open = true; SC.sig = ''; SC.mode = ''; SC.lastMove = Date.now();
+  SC.back = S.shownRoute || (isAdmin() ? 'admin' : ''); // EXIT 은 들어오기 전 화면으로 (새 탭으로 바로 열었으면 홈 · 운영자는 운영 관리)
+  SC.viaApp = !!S.shownRoute; // 이 탭에서 다른 화면을 보다 들어옴 → EXIT 는 '뒤로 가기'(새 기록을 쌓으면 휴대폰 뒤로 가기가 타이머를 다시 엶)
+  SC.keepView = !!S.st && S.lastRoute === S.shownRoute; // 밑에 깔린 화면이 정상 화면인지(로딩·오류·시상식 대기 화면이면 돌아올 때 다시 그림)
+  SC.phaseAtOpen = phase();
+  const el = $('#screen');
+  el.innerHTML = '<div class="sc-bg"></div>'
+    + '<div class="sc-top"><span>egoidsm · <b>AX HACKATHON 2026</b></span><span class="r"><span class="sc-live" id="scLive"></span><span class="sc-clock" id="scClock"></span></span></div>'
+    + '<div class="sc-flash" id="scFlash"></div>'
+    + '<div class="sc-head" id="scHead"></div>'
+    + '<div class="sc-hz"></div>'
+    + '<div class="sc-hall"><div class="sc-hall-head"><span>Exhibition Hall<span class="ko">전시회장 · 방금 들어온 작품부터</span></span><span id="scCount"></span></div><div class="sc-rows" id="scRows"></div></div>'
+    + '<div class="sc-note" id="scNote"></div>'
+    + '<div class="sc-ctl">' + (document.fullscreenEnabled ? '<button onclick="toggleFS()">FULLSCREEN (F)</button>' : '') + '<button onclick="scExit()">EXIT</button></div>';
+  el.classList.add('open'); document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', scKey); el.addEventListener('mousemove', scMove); el.addEventListener('pointerdown', scMove); // 휴대폰은 마우스 이동이 없어 터치로 버튼을 다시 띄움
+  window.addEventListener('resize', scResize); document.addEventListener('visibilitychange', scWake);
+  if (document.fonts) document.fonts.ready.then(() => { if (SC.open) scBuildRows(true); }); // 글꼴이 늦게 오면 카운트다운 높이가 바뀜
+  scWake(); SC.last = 0; SC.raf = requestAnimationFrame(scLoop);
+}
+function closeScreen() {
+  SC.open = false; cancelAnimationFrame(SC.raf); SC.raf = 0; SC.rows = []; SC.seen = null;
+  const el = $('#screen'); el.classList.remove('open', 'idle'); el.innerHTML = ''; document.body.style.overflow = '';
+  document.removeEventListener('keydown', scKey); el.removeEventListener('mousemove', scMove); el.removeEventListener('pointerdown', scMove);
+  window.removeEventListener('resize', scResize); document.removeEventListener('visibilitychange', scWake);
+  if (SC.wake) { SC.wake.release().catch(() => { }); SC.wake = null; }
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
+}
+function scExit() { if (SC.viaApp && history.length > 1) history.back(); else location.replace('#/' + SC.back); }
+function scKey(e) { if (e.key === 'f' || e.key === 'F') toggleFS(); }
+function scMove() { SC.lastMove = Date.now(); $('#screen').classList.remove('idle'); }
+function scResize() { clearTimeout(SC.rzT); SC.rzT = setTimeout(() => scBuildRows(true), 300); }
+// 노트북이 절전·화면 꺼짐으로 들어가지 않게 (https · localhost 에서만 동작, 안 되면 조용히 넘어감). 메뉴에서 여는 휴대폰은 배터리 때문에 제외(폭 900 미만)
+async function scWake() { try { if (SC.open && !document.hidden && innerWidth >= 900 && navigator.wakeLock && !SC.wake) { const lock = await navigator.wakeLock.request('screen'); if (!SC.open) { lock.release().catch(() => { }); return; } /* 허락이 오기 전에 타이머를 닫았으면 바로 풀기 */ SC.wake = lock; lock.addEventListener('release', () => { SC.wake = null; }); } } catch (e) { } }
+function scRender() { if (!SC.open) return; scHead(); scTick(); scBuildRows(); } // 카운트다운 글자를 먼저 채워야 아래 띠의 높이가 맞게 잡힘
+function scEntries() { return S.st ? S.st.entries.filter(e => e.status !== 'excluded' && e.status !== 'deleted').sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : []; }
+/* 지금 보여 줄 위쪽 장면: 카운트다운(목표 시각이 아직 남음) 또는 종료 문구 */
+function scState() {
+  const manual = !!S.st && S.st.config.phaseOverride !== 'auto';
+  // 자동이면 단계를 시계로 바로 판정 — 서버 갱신(수 초~수십 초)을 기다리면 09:00 에 '대기' 같은 지난 단계 이름이 크게 뜸(loadStateCache 와 같은 방식)
+  const p = manual ? phase() : phaseByTime(now()); const c = SC_CD[p];
+  if (c && T[c[1]] > now()) return { key: p + ':cd', p, cd: true, label: c[0], target: T[c[1]] };
+  // 운영자가 단계를 직접 연 경우(예: 18:00 뒤 제출 연장): 일정표상 마감이 지났어도 '마감'이라 하지 않고 '진행 중'으로. 끝 시각을 모르니 카운트다운은 없음.
+  // 18:00 전에 수동 '산출물 제출'로 바꾸면 18:00 까지는 원래 카운트다운이 그대로 보임 → 연장은 18:00 이 지난 뒤 바꿀 것(작업메모 §3)
+  if (c && manual) return { key: p + ':open', p, cd: false, open: true };
+  return { key: p + ':end', p, cd: false };
+}
+function scHead() {
+  const s = scState(); SC.mode = s.key; const box = $('#scHead'); if (!box) return;
+  const live = s.p === 'award' || (['submit', 'impact', 'vote'].includes(s.p) && (s.cd || s.open));
+  $('#scLive').innerHTML = live ? '<i></i>LIVE · ' + esc(PHASE_META[s.p].label) : esc(PHASE_META[s.p].label);
+  if (s.cd) {
+    box.innerHTML = '<div class="sc-label">' + esc(s.label) + '</div><div class="sc-cd" id="scCd"></div><div class="sc-sub" id="scSub"></div>'
+      + (s.p === 'submit' ? '<div class="sc-bar"><i id="scBar"></i><span style="left:0">09:00 START</span><span style="right:0">18:00 CLOSE</span></div>' : '');
+    return;
+  }
+  const n = scEntries().length;
+  const end = s.open
+    ? ({ submit: ['SUBMISSION OPEN', '제출 진행 중', '지금까지 <b>' + n + '</b>개 출품 · 마감 시각은 운영진 안내를 따릅니다'], before: ['AX HACKATHON 2026', '곧 시작합니다', esc(CONFIG.EVENT.place)] }[s.p]
+      || ['AX HACKATHON 2026', PHASE_META[s.p].label + (['impact', 'vote'].includes(s.p) ? ' 진행 중' : ''), '출품작 <b>' + n + '</b>개'])
+    : ({ closed: ['SUBMISSION CLOSED', '제출 마감', '총 <b>' + n + '</b>개 작품이 출품되었습니다 · 모두 수고하셨습니다'], submit: ['SUBMISSION CLOSED', '제출 마감', '총 <b>' + n + '</b>개 작품이 출품되었습니다 · 모두 수고하셨습니다'] }[s.p]
+      || ['AX HACKATHON 2026', PHASE_META[s.p].label, '출품작 <b>' + n + '</b>개']);
+  box.innerHTML = '<div class="sc-label">' + end[0] + '</div><div class="sc-end">' + esc(end[1]) + '</div><div class="sc-sub">' + end[2] + '</div>';
+}
+/* 글자마다 고정 폭 칸에 넣는다 — Oswald 는 숫자 폭이 제각각(1 은 0.39em, 0 은 0.55em)이고 tabular-nums 도 무시해서, 그냥 두면 초가 바뀔 때마다 타이머가 좌우로 흔들림 */
+function scCdHTML(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000)); // 올림: 시계가 17:59:51 일 때 남은 9초로 보이게(내림이면 8초로 1초 어긋남). 18:00:00 이 되는 순간 '제출 마감'으로 바뀜
+  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  const cells =str => str.split('').map(ch => ch === ':' ? '<span class="c">:</span>' : '<span class="n">' + ch + '</span>').join('');
+  return (d ? '<span class="d">' + d + '일</span>' : '') + cells(pad(h) + ':' + pad(m) + ':' + pad(x));
+}
+function scTick() {
+  if (!SC.open) return;
+  const t = now(); const ck = $('#scClock'); if (ck) ck.textContent = kstTime(t) + ' KST';
+  const s = scState(); if (s.key !== SC.mode) scHead();
+  if (s.cd) {
+    const left = s.target - t; const cd = $('#scCd');
+    const FINAL = 30 * 60000, WARN = 60 * 60000; // 30분 전부터 깜빡임 + '지금 바로 제출하세요'(10/15 예람님), 1시간 전부터 주황
+    const urgent = s.p === 'submit'; // 제출 마감에만. 시작·시상식 카운트다운이 30분 동안 깜빡이면 할 일도 없는데 재촉하는 것처럼 보임
+    if (cd) { cd.innerHTML = scCdHTML(left); cd.className = 'sc-cd' + (urgent && left <= FINAL ? ' final' : urgent && left <= WARN ? ' warn' : ''); }
+    let sub, hot = false; const n = scEntries().length;
+    if (s.p === 'submit') {
+      if (left <= FINAL) { sub = '지금 바로 제출하세요 · 18:00 마감'; hot = true; }
+      else if (left <= 3600000) { sub = '18:00 에 제출이 닫힙니다 · 지금까지 <b>' + n + '</b>개 출품'; hot = true; } // '마감 1시간 전' 문구는 1시간 남은 것처럼 읽혀서 뺌(10/15 예람님)
+      else sub = '10.21 (수) 18:00 마감 · 지금까지 <b>' + n + '</b>개 출품';
+    } else if (s.p === 'before') sub = '10.21 (수) 09:00 시작 · ' + esc(CONFIG.EVENT.place);
+    else sub = { impact: '10.22 (목) 22:00 마감', vote: '10.22 (목) 24:00 마감', judging: '10.23 (금) 13:30 시작' }[s.p] || esc(kstFmt(s.target)); // 투표 마감을 '10. 23. (금) 00:00' 으로 쓰면 금요일 밤으로 읽힘 → 다른 화면과 같은 표기로
+    const sb = $('#scSub'); if (sb && sb.innerHTML !== sub) sb.innerHTML = sub; if (sb) sb.classList.toggle('hot', hot);
+    const bar = $('#scBar'); if (bar) bar.style.width = Math.max(0, Math.min(100, (t - T.submitStart) / (T.submitEnd - T.submitStart) * 100)).toFixed(3) + '%';
+  }
+  scBuildRows(); // 위쪽 높이가 바뀌면(18:00 카운트다운 → '제출 마감' 등) 띠 카드 크기를 다시 맞춤. 높이·출품이 같으면 아무것도 안 함
+  $$('#scRows .sc-new').forEach(b => { if (Number(b.dataset.until) < t) b.remove(); });
+  if (Date.now() - SC.lastMove > 3000) $('#screen').classList.add('idle');
+  const note = $('#scNote');
+  if (note) {
+    const stale = !DEMO && S.lastOk && Date.now() - S.lastOk > 5 * 60000;
+    note.className = 'sc-note' + (stale ? ' bad' : '');
+    const failed = !S.lastOk && S.err && !S.loading; // 첫 조회부터 실패(빈 띠에 스피너만 도는 상태) → 운영자가 알 수 있게
+    if (failed) note.className = 'sc-note bad';
+    note.textContent = S.lastOk ? (stale ? '서버 응답 지연 · 마지막 갱신 ' : '갱신 ') + kstTime(S.lastOk + serverOffset) : failed ? '서버에 연결하지 못했습니다 · 자동으로 다시 시도합니다' : (S.loading ? '불러오는 중…' : '');
+  }
+}
+/* 카드 썸네일: Drive 파일(공유 링크 썸네일) → 유튜브 표지 → 구글 문서류 → 그 밖의 링크 스냅샷. 못 구하면 파일 종류 아이콘 */
+function scThumb(e) {
+  const f = (e.files || []).find(f => f.id && !f.demo);
+  if (f) return { src: 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(f.id) + '&sz=w800', icon: fileIcon(f.mime, f.name), video: /^video\//.test(f.mime || '') || /\.(mp4|mov|webm|mkv)$/i.test(f.name || '') };
+  for (const u of parseLinks(e.link)) {
+    const m = embedFor(u); let g;
+    if (m.type === 'youtube') return { src: 'https://i.ytimg.com/vi/' + ytId(u) + '/hqdefault.jpg', icon: m.icon, video: true };
+    if ((g = u.match(/(?:drive\.google\.com\/file\/d\/|docs\.google\.com\/(?:document|presentation|spreadsheets)\/d\/)([\w-]+)/))) return { src: 'https://drive.google.com/thumbnail?id=' + g[1] + '&sz=w800', icon: m.icon };
+    if (m.type === 'snapshot') return { src: m.src, icon: m.icon };
+  }
+  const first = mediaList(e)[0];
+  return { src: '', icon: first ? first.icon : 'fa-wand-magic-sparkles', video: !!first && (first.video || /fa-film|youtube|tiktok/.test(first.icon)) };
+}
+function scCardHTML(e) {
+  const th = scThumb(e); const icon = th.icon.indexOf(' ') > 0 ? th.icon : 'fa-solid ' + th.icon;
+  const at = new Date(e.createdAt).getTime();
+  // 18:00 뒤 10분 유예(공지하지 않음)에 들어온 출품은 NEW 를 달지 않음 — '제출 마감' 화면에 NEW 가 뜨면 아직 받는 줄 앎. 운영자가 직접 연장한 경우는 그대로
+  const until = at >= T.submitEnd && !(S.st && S.st.config.phaseOverride !== 'auto') ? 0 : at + 15 * 60000;
+  return '<div class="sc-card"><div class="sc-thumb"><i class="ic ' + esc(icon) + '"></i>'
+    + (th.src ? '<img alt="" src="' + esc(th.src) + '" class="' + (SC.loaded.has(th.src) ? 'ok' : '') + '" onload="scImg(this)" onerror="if(!this.dataset.re)this.remove()">' : '')
+    + (th.video ? '<span class="sc-play"><i class="fa-solid fa-play"></i></span>' : '')
+    + (until > now() ? '<span class="tag fill sc-new" data-until="' + until + '">NEW</span>' : '')
+    + '</div><div class="sc-meta"><div class="t">' + esc(e.title) + '</div><div class="w"><b>' + esc(e.name) + '</b><span class="tag">' + esc(e.dept) + '</span></div></div></div>';
+}
+function scImg(img) {
+  const src = img.getAttribute('src'); img.dataset.re = '';
+  if (/ytimg/.test(src) && img.naturalWidth <= 120) { img.remove(); return; } // 표지 없는 영상은 120×90 회색 그림이 옴
+  if (/mshots/.test(src) && img.naturalWidth < 600) { // 스냅샷 "생성 중" 그림 → 잠시 뒤 다시 받기 (snapCheck 와 같은 방식)
+    const n = (+img.dataset.tries || 0) + 1; img.dataset.tries = n; if (n > 8) { img.remove(); return; }
+    setTimeout(async () => { if (!img.isConnected) return; try { await fetch(src, { mode: 'no-cors', cache: 'reload' }); } catch (e) { } img.dataset.re = '1'; img.src = ''; img.src = src; }, 8000);
+    return;
+  }
+  img.classList.add('ok'); SC.loaded.add(src);
+}
+function scBuildRows(force) {
+  const box = $('#scRows'); if (!box) return;
+  const list = scEntries();
+  const H = box.clientHeight;
+  const sig = list.map(e => e.id + ':' + (e.updatedAt || '')).join('|') + '@' + innerWidth + 'x' + H + (S.st ? '' : '~');
+  if (!force && sig === SC.sig) return; SC.sig = sig;
+  const depts = new Set(list.map(e => e.dept)).size;
+  $('#scCount').innerHTML = list.length ? '<b>' + list.length + '</b>출품<b>' + depts + '</b>부서' : '';
+  // 새로 들어온 출품 알림 (첫 화면에 이미 있던 것은 알리지 않음)
+  if (SC.seen && S.st) { const fresh = list.filter(e => !SC.seen.has(e.id)); if (fresh.length && scState().p === 'submit') scFlash(fresh[0], fresh.length); } // 제출이 열려 있을 때만 (유예 시간 출품은 조용히 추가)
+  if (S.st) SC.seen = new Set(list.map(e => e.id));
+  if (!list.length) {
+    box.innerHTML = '<div class="sc-empty">' + (S.st ? '<div class="standby-line"></div>첫 번째 작품을 기다리고 있습니다' : '<span class="spin"></span>') + '</div>'; SC.rows = []; return;
+  }
+  const nRows = 1; // 멀리서도 읽히게 한 줄 (2줄은 1080p 에서 카드가 너무 작아짐)
+  const groups = Array.from({ length: nRows }, (_, i) => list.filter((_, k) => k % nRows === i));
+  const rg = Math.round(innerHeight * .025); const g = Math.max(14, Math.round(innerWidth * .014));
+  const prev = SC.rows;
+  const build = cw => {
+    box.style.setProperty('--cw', cw + 'px'); box.style.setProperty('--g', g + 'px'); box.style.gap = rg + 'px';
+    box.innerHTML = groups.map(() => '<div class="sc-row"><div class="sc-track"></div></div>').join('');
+    return $$('.sc-track', box).map((el, i) => {
+      const items = groups[i].map(scCardHTML).join(''); const W = groups[i].length * (cw + g);
+      if (W <= innerWidth) { el.innerHTML = items; el.parentElement.classList.add('static'); return { el, half: 0, pos: 0 }; } // 화면을 다 못 채우면 가운데 정렬로 멈춰 둠
+      const reps = Math.ceil(innerWidth / W); const copy = items.repeat(reps); el.innerHTML = copy + copy; // 같은 묶음을 두 번 → 절반 지점에서 처음으로 이어 붙임
+      const half = el.scrollWidth / 2; const old = prev[i];
+      return { el, half, dir: i % 2 ? -1 : 1, pos: old && old.half ? old.pos % half : 0 };
+    });
+  };
+  let cw = Math.min((H - rg * (nRows - 1)) / nRows / .9, innerWidth * (innerWidth < 900 ? .62 : .26)); // 휴대폰은 카드를 화면 폭의 62% 까지 (26% 면 글자가 안 읽힘)
+  SC.rows = build(cw);
+  const card = box.querySelector('.sc-card'); const used = card ? card.offsetHeight * nRows + rg * (nRows - 1) : 0;
+  if (used > H && H > 0) { cw = cw * H / used * .98; SC.rows = build(cw); } // 실제 카드 높이로 한 번 보정
+  SC.rows.forEach(r => scPlace(r));
+}
+function scPlace(r) { if (r.half) r.el.style.transform = 'translate3d(' + (r.dir > 0 ? -r.pos : -(r.half - r.pos)).toFixed(1) + 'px,0,0)'; }
+function scLoop(t) {
+  if (!SC.open) { SC.raf = 0; return; }
+  const dt = SC.last ? Math.min(100, t - SC.last) : 0; SC.last = t;
+  const v = innerWidth * .024 / 1000; // 초당 화면 폭의 2.4% (1920 폭에서 초당 약 46px)
+  SC.rows.forEach(r => { if (!r.half) return; r.pos = (r.pos + v * dt) % r.half; scPlace(r); });
+  SC.raf = requestAnimationFrame(scLoop);
+}
+function scFlash(e, n) {
+  const el = $('#scFlash'); if (!el) return;
+  el.innerHTML = '<span class="tag fill">NEW' + (n > 1 ? ' +' + n : '') + '</span><b>' + esc(e.name) + '</b><span class="tag">' + esc(e.dept) + '</span><em>' + esc(e.title) + '</em>';
+  el.classList.add('on'); clearTimeout(SC.flashT); SC.flashT = setTimeout(() => el.classList.remove('on'), 7000);
 }
 
 /* ═══════════════ AWARD SHOW ═══════════════ */
@@ -1476,7 +1778,7 @@ function awKey(e) {
   else if (/^[1-9]$/.test(e.key)) { awSetMedia(+e.key - 1); }
 }
 function awClick(e) { if (e.target.closest('iframe, a, button, .thumbs, .viewer, .impact-box')) return; next(); }
-function toggleFS() { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => { }); }
+function toggleFS() { const el = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => { }); } // 아이폰 사파리는 requestFullscreen 이 없음
 function next() { clearTimeout(AW.timer); if (AW.i < AW.steps.length - 1) { AW.i++; AW.mediaIdx = 0; drawStep(); } }
 function prev() { clearTimeout(AW.timer); if (AW.i > 0) { AW.i--; if (AW.steps[AW.i].t === 'count') AW.i--; AW.mediaIdx = 0; drawStep(); } }
 function makeStars() {
