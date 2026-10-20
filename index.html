@@ -291,6 +291,8 @@ button{font-family:inherit}
 #award .hint{position:absolute;bottom:20px;right:28px;font-size:12px;color:var(--mute);letter-spacing:.06em;display:flex;gap:14px;transition:opacity .6s;z-index:2}
 #award .hint kbd{border:1px solid var(--line2);border-radius:4px;padding:1px 6px;font-family:var(--disp);color:var(--fg2);font-size:11px}
 #award .hint.hide{opacity:0}
+#award .aw-sync{position:absolute;bottom:20px;left:28px;font-size:11px;color:var(--mute);opacity:.6;letter-spacing:.04em;z-index:2;pointer-events:none}
+#award .aw-sync.bad{color:var(--warn);opacity:1}
 #award .progress{position:absolute;bottom:0;left:0;height:2px;background:var(--acc);transition:width .6s;z-index:2}
 #award .exit{position:absolute;top:18px;right:28px;z-index:3;background:none;border:1px solid var(--line2);color:var(--mute);border-radius:4px;padding:6px 10px;font-size:11px;letter-spacing:.14em;font-family:var(--disp);cursor:pointer}
 #award .exit:hover{color:var(--fg);border-color:var(--fg)}
@@ -329,7 +331,7 @@ button{font-family:inherit}
 .impact-box{border-left:2px solid var(--acc);padding:6px 0 6px 22px;margin-top:26px}
 .impact-box .k{margin-bottom:10px}
 .impact-box p{margin:0;font-size:clamp(15px,1.3vw,20px);color:var(--fg2);line-height:1.6;max-height:9.6em;overflow:auto;white-space:pre-wrap}
-.ai-box{margin-top:16px;font-size:clamp(13px,1vw,15px);color:var(--mute);max-height:4.8em;overflow:auto}
+.ai-box{margin-top:16px;font-size:clamp(13px,1vw,15px);color:var(--mute);max-height:4.8em;overflow:auto;white-space:pre-wrap} /* 번호 목록으로 쓴 AI 활용이 한 덩어리로 붙지 않게 */
 /* 시상식 미리보기: 화면 높이 기준으로 키움 (전체화면에서 스크롤이 생기지 않는 범위) */
 .reveal .viewer{box-shadow:0 30px 100px rgba(0,0,0,.6),0 0 0 1px var(--line2);aspect-ratio:auto;height:min(70vh,860px);width:100%}
 .reveal .viewer.tall{aspect-ratio:9/16;height:min(74vh,880px);width:auto}
@@ -544,6 +546,7 @@ button{font-family:inherit}
   <button class="exit" id="awExit" title="ESC">EXIT</button>
   <div class="stage" id="stage"></div>
   <div class="hint" id="awHint"><span><kbd>SPACE</kbd> / <kbd>→</kbd> 다음</span><span><kbd>←</kbd> 이전</span><span><kbd>1-9</kbd> 미디어</span><span><kbd>F</kbd> 전체화면</span><span><kbd>HOME</kbd> 처음부터</span><span><kbd>ESC</kbd> 나가기</span></div>
+  <div class="aw-sync" id="awSync"></div>
   <div class="progress" id="awProg" style="width:0"></div>
 </div>
 
@@ -792,6 +795,11 @@ function computeResultsLocal(entries, votes, scores) {
   let r = 0; list.forEach(e => e.rank = e.status === 'excluded' ? null : ++r);
   return { list, maxVotes, totalVoters: votes.length, prizeCount: CONFIG.PRIZES.length, computedAt: Date.now() };
 }
+// 구성원에게 보이는 결과(결과 공개 때) — 순위만, 대표 점수 · 득표 · 합계는 뺌(서버 publicResults 와 같게)
+function publicResultsLocal(R) {
+  if (!R) return R;
+  return { list: R.list.map(e => { const o = Object.assign({}, e); ['ceoScore', 'votes', 'ceoPart', 'votePart', 'total'].forEach(k => delete o[k]); return o; }), totalVoters: R.totalVoters, prizeCount: R.prizeCount, computedAt: R.computedAt };
+}
 
 /* ═══════════════ 대기 화면 (진행 막대 + 한 줄 멘트) ═══════════════
    Apps Script 는 요청이 몰리면 응답이 수십 초 걸릴 수 있다. 스피너 대신 0→100% 막대와 돌아가는 멘트로 기다리는 시간을 체감시킨다.
@@ -918,7 +926,7 @@ function logoutRole() {
   S.admin = ''; S.role = ''; S.adminSt = null;
   S.inflight = null; // 진행 중이던 판정자 조회는 refresh 가 열쇠 비교로 버림 — 로그아웃 뒤엔 새 공개 조회를 바로 시작하게
   // 화면에 남은 판정자 전용 자료(투표 내역 · 점수 · 업로드 기록, 공개 전 결과)를 지움 — 다음 공개 조회가 오기 전까지 보이거나 공개 캐시에 남지 않게
-  if (S.st) { const pub = !!(S.st.config && S.st.config.resultsPublic); S.st = Object.assign({}, S.st); ['votes', 'scores', 'uploads', 'role'].forEach(k => delete S.st[k]); if (!pub) S.st.results = null; S.st.entries = (S.st.entries || []).filter(e => e.status !== 'deleted').map(e => { const o = Object.assign({}, e); delete o.hasPin; return o; }); }
+  if (S.st) { const pub = !!(S.st.config && S.st.config.resultsPublic); S.st = Object.assign({}, S.st); ['votes', 'scores', 'uploads', 'role'].forEach(k => delete S.st[k]); S.st.results = pub ? publicResultsLocal(S.st.results) : null; S.st.entries = (S.st.entries || []).filter(e => e.status !== 'deleted').map(e => { const o = Object.assign({}, e); delete o.hasPin; return o; }); }
   ['ax_admin', 'ax_role', 'ax_state_adm'].forEach(k => { lsDel(k); try { sessionStorage.removeItem(k); } catch (e) { } });
 }
 function canAccess(view) {
@@ -1710,7 +1718,8 @@ function adminAwardHTML(st) {
     + chk(unscored === 0, '대표 평가 ' + (unscored === 0 ? '전체 완료' : unscored + '건 미완료'))
     + chk((st.votes || []).length > 0, '투표 ' + (st.votes || []).length + '명 참여')
     + chk(top.every(r => r.impact), '수상 후보 5인 임팩트 기입 ' + (top.every(r => r.impact) ? '완료' : '누락 있음'))
-    + chk(phase() === 'award' || st.config.phaseOverride !== 'auto', '현재 단계: ' + PHASE_META[phase()].label + (phase() !== 'award' ? ' (시상식 단계가 아니어도 관리자는 열 수 있음)' : ''))
+    // 집계 · 시상식 · 종료 단계만 초록 — 제출 · 기입 · 투표가 열려 있으면(수동으로 연 경우 포함) 시상식 중에도 표가 들어와 순위가 바뀔 수 있음
+    + chk(['judging', 'award', 'after'].includes(phase()), '현재 단계: ' + PHASE_META[phase()].label + (['submit', 'impact', 'vote'].includes(phase()) ? ' — 아직 제출 · 기입 · 투표가 열려 있음' + (st.config.phaseOverride !== 'auto' ? ' (수동 설정 → 설정 · 단계 제어에서 자동으로 되돌리기)' : '') : phase() !== 'award' ? ' (시상식 단계가 아니어도 열 수 있음)' : ''))
     + '<p class="mute" style="font-size:13px;margin:16px 0 0">발표용 노트북에서 이 계정으로 로그인한 뒤 아래 버튼으로 전체화면 시상식을 시작하세요. 진행: <b>SPACE</b> 다음 · <b>←</b> 이전 · <b>F</b> 전체화면 · <b>ESC</b> 종료. 5위 → 1위 순으로 공개되며 각 수상자 화면에서 산출물 미디어가 재생됩니다.</p>'
     + '<div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap"><button class="btn" onclick="location.hash=\'#/award\'"><i class="fa-solid fa-trophy"></i> 시상식 열기</button><button class="btn ghost" onclick="AD.tab=\'status\';render()">결과 표 확인</button></div></div>'
     + '<div class="card" style="padding:26px"><div class="k" style="margin-bottom:14px">현재 순위 (공개 전 · 관리자만)</div>' + (top.length ? top.map(r => '<div style="display:flex;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)"><span class="num" style="font-size:26px;color:var(--acc);width:34px;font-weight:600">' + r.rank + '</span><div style="flex:1;min-width:0"><b>' + esc(r.name) + '</b> <span class="mute" style="font-size:12px">' + esc(r.dept) + '</span><div style="font-size:13px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.title) + '</div></div><span class="num" style="font-weight:700">' + r.total + '</span></div>').join('') : '<p class="mute">출품작 없음</p>') + '</div></div><style>@media(max-width:860px){.aw2{grid-template-columns:1fr!important}}</style>';
@@ -1759,7 +1768,7 @@ function closeScreen(keepFS) { // keepFS: 개막 화면으로 바로 넘어갈 �
   if (!keepFS && document.fullscreenElement) document.exitFullscreen().catch(() => { });
 }
 function scExit() { if (SC.viaApp && history.length > 1) history.back(); else location.replace('#/' + SC.back); }
-function scKey(e) { if (e.ctrlKey || e.metaKey || e.altKey) return; if (e.key === 'f' || e.key === 'F') toggleFS(); }
+function scKey(e) { if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return; if (e.key === 'F5') { e.preventDefault(); if (!document.fullscreenElement) toggleFS(); return; } if (e.key === 'f' || e.key === 'F') toggleFS(); } // F5: 클리커 '슬라이드쇼' 버튼 — 새로고침 대신 전체화면
 function scMove() { SC.lastMove = Date.now(); $('#screen').classList.remove('idle'); }
 function scResize() { clearTimeout(SC.rzT); SC.rzT = setTimeout(() => scBuildRows(true), 300); }
 // 노트북이 절전·화면 꺼짐으로 들어가지 않게 (https · localhost 에서만 동작, 안 되면 조용히 넘어감). 메뉴에서 여는 휴대폰은 배터리 때문에 제외(폭 900 미만)
@@ -1988,7 +1997,7 @@ function openOpening() {
   if (OP.open) return;
   OP.open = true; OP.lastMove = Date.now();
   OP.back = S.shownRoute || ''; OP.viaApp = !!S.shownRoute; OP.keepView = !!S.st && S.lastRoute === S.shownRoute; OP.phaseAtOpen = phase();
-  const qs = OP.stepUsed ? 0 : Number(new URLSearchParams(location.search).get('step')); OP.stepUsed = true; // ?step=N 은 페이지를 처음 열 때 한 번만(리허설용)
+  const qs = OP.stepUsed ? 0 : Number(new URLSearchParams(location.search).get('step')); OP.stepUsed = true; dropStepParam(); // ?step=N 은 페이지를 처음 열 때 한 번만(리허설용), 주소에서도 지워 새로고침 땐 보던 장에서 이어 감
   let saved = 0; try { saved = Number(sessionStorage.getItem(OP_STEP_KEY)) || 0; } catch (e) { }
   // 새로 고치거나 타이머에 갔다 돌아오면 보던 장에서 이어감(EXIT 로 나가면 기록을 지워 다음엔 처음부터). 처음부터: Home
   OP.i = qs > 0 && qs < OP_SLIDES.length ? qs : (saved > 0 && saved < OP_SLIDES.length ? saved : 0);
@@ -2035,6 +2044,8 @@ function opTick() {
 function opMove() { OP.lastMove = Date.now(); $('#opening').classList.remove('idle'); }
 function opKey(e) {
   if (e.ctrlKey || e.metaKey || e.altKey) return; // Ctrl+F(찾기) · Alt+←(뒤로) 는 브라우저 몫
+  if (e.repeat) return; // 키를 꾹 눌러도 한 장만
+  if (e.key === 'F5') { e.preventDefault(); if (!document.fullscreenElement) toggleFS(); return; } // 클리커 '슬라이드쇼' 버튼 — 새로고침 대신 전체화면
   if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'Enter') { e.preventDefault(); opGo(1); } // 클리커는 대개 PageDown/PageUp
   else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'Backspace') { e.preventDefault(); opGo(-1); }
   else if (e.key === 'Home') { e.preventDefault(); OP.i = 0; opDraw(); }
@@ -2046,45 +2057,102 @@ function opKey(e) {
 function opClick(e) { if (e.target.closest('button, a')) return; opGo(e.clientX < innerWidth * .25 ? -1 : 1); }
 
 /* ═══════════════ AWARD SHOW ═══════════════ */
-const AW = { open: false, steps: [], i: 0, results: null, timer: null, mediaIdx: 0, lastMove: 0 };
+const AW = { open: false, steps: [], i: 0, results: null, timer: null, mediaIdx: 0, lastMove: 0, stepUsed: false, locked: false, sync: '', pollTimer: null, pollSeq: 0, wake: null, lockUntil: 0 };
+const awFetch = () => API.get('results', { key: S.admin }, { timeoutMs: 15000 }).then(r => r.results);
 async function openAward() {
   if (AW.open) return;
   if (!canAccess('award')) { return; }
-  // 이미 받아 둔 집계가 있으면 즉시 무대를 열고, 최신 집계는 뒤에서 받아 대기 화면에 머무는 동안 갱신
+  // 이미 받아 둔 집계가 있으면 즉시 무대를 열고, 최신 집계는 첫 수상 발표 전까지 뒤에서 계속 받아 갈아 끼움(awPoll)
   let R = S.st && S.st.results;
-  const fetchFresh = () => API.get('results', { key: S.admin }, { timeoutMs: 15000 }).then(r => r.results);
   if (!R) {
-    try { R = await fetchFresh(); }
+    try { R = await awFetch(); }
     catch (e) { // 준비 화면에 오류와 재시도 버튼 표시 (잠금 화면에 갇히지 않도록)
-      if (route() === 'award') $('#view').innerHTML = '<div class="gate"><div class="icon"><i class="fa-solid fa-plug-circle-xmark"></i></div><p class="eyebrow" style="margin-bottom:14px">Award Ceremony</p><h2 class="h2">집계를 불러오지 못했습니다</h2><p class="mute" style="margin-top:10px;font-size:14px">' + esc(e.message) + '</p><div style="margin-top:24px;display:flex;gap:10px;justify-content:center"><button class="btn" onclick="render()"><i class="fa-solid fa-rotate"></i> 다시 시도</button><a class="btn ghost" href="#/admin">관리자</a></div></div>';
+      if (route() === 'award') $('#view').innerHTML = '<div class="gate"><div class="icon"><i class="fa-solid fa-plug-circle-xmark"></i></div><p class="eyebrow" style="margin-bottom:14px">Award Ceremony</p><h2 class="h2">집계를 불러오지 못했습니다</h2><p class="mute" style="margin-top:10px;font-size:14px">' + esc(e.message) + '</p><div style="margin-top:24px;display:flex;gap:10px;justify-content:center"><button class="btn" onclick="render()"><i class="fa-solid fa-rotate"></i> 다시 시도</button>' + (isAdmin() ? '<a class="btn ghost" href="#/admin">운영 관리</a>' : '<a class="btn ghost" href="#/ceo">대표 평가</a>') + '</div></div>';
       return;
     }
     if (AW.open || route() !== 'award' || !canAccess('award')) return; // 결과를 기다리는 사이 다른 화면으로 갔거나 로그아웃했으면 열지 않음
   }
-  else { fetchFresh().then(fresh => { if (AW.open && AW.i === 0 && fresh) { AW.results = fresh; buildSteps(); } }).catch(() => { }); }
-  AW.results = R; buildSteps(); AW.i = 0; AW.open = true;
-  // 리허설용: ?step=N 으로 특정 장면부터 시작 (예: step=6 → 5위 공개)
-  const qs = Number(new URLSearchParams(location.search).get('step')); if (qs > 0 && qs < AW.steps.length) AW.i = qs;
-  // 진행 중 닫히거나 새로고침되어도 같은 장면에서 이어감 (처음부터: Home 키)
-  if (!qs) { const saved = Number(awLoadStep()); if (saved > 0 && saved < AW.steps.length) { AW.i = saved; setTimeout(() => toast('이전 진행 지점(' + saved + '/' + (AW.steps.length - 1) + ')에서 이어갑니다 · 처음부터 시작하려면 Home 키', ''), 300); } }
+  AW.results = R; AW.locked = false; buildSteps(); AW.i = 0; AW.open = true; AW.lockUntil = 0;
+  // 리허설용: ?step=N 으로 특정 장면부터 시작 (예: step=6 → 5위 공개) — 페이지를 처음 열 때 한 번만(주소에 남아 있어도 다시 열 땐 무시)
+  const qs = AW.stepUsed ? 0 : Number(new URLSearchParams(location.search).get('step')); AW.stepUsed = true; dropStepParam(); // 주소에서도 지움 — 새로고침 때 다시 그 장면으로 튀지 않게
+  if (qs > 0 && qs < AW.steps.length) AW.i = qs;
+  // 새로고침되면 같은 장면에서 이어감(EXIT · Esc 로 닫으면 기록을 지워 다음엔 대기 화면부터). 수상 발표가 시작된 뒤였다면 그때 쓰던 집계로 이어 가 순위가 바뀌지 않게
+  if (!qs) {
+    const sv = awLoadStep();
+    if (sv.i <= 0 && sv.snap) { try { sessionStorage.removeItem(AW_SNAP_KEY); } catch (e) { } } // 대기 화면에서 새로고침 = 처음부터 → 지난 고정 집계는 버림
+    if (sv.i > 0) {
+      if (sv.snap) { AW.results = sv.snap; AW.locked = true; buildSteps(); }
+      if (sv.i < AW.steps.length) { AW.i = sv.i; setTimeout(() => toast('이전 진행 지점(' + sv.i + '/' + (AW.steps.length - 1) + ')에서 이어갑니다 · 처음부터 시작하려면 Home 키', ''), 300); }
+    }
+  }
   window.addEventListener('beforeunload', awBeforeUnload); // 실수로 새로고침·뒤로가기·탭 닫기 시 확인창
   $('#award').classList.add('open'); document.body.style.overflow = 'hidden';
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); // 시상식 화면에서 로그인했을 때 밑에 남은 비밀번호 칸이 키를 가져가지 않게
   makeStars(); drawStep();
   document.addEventListener('keydown', awKey); $('#award').addEventListener('click', awClick);
+  window.addEventListener('blur', awRefocus); // 영상(iframe)을 누르면 키가 영상으로 가서 클리커가 안 먹음 → 잠시 뒤 되돌림
+  document.addEventListener('visibilitychange', awWake); awWake(); // 대기 화면을 오래 띄워 둬도 화면이 꺼지지 않게
   $('#award').addEventListener('mousemove', () => { AW.lastMove = Date.now(); $('#awHint').classList.remove('hide'); });
   AW.hintTimer = setInterval(() => { if (Date.now() - AW.lastMove > 4000) $('#awHint').classList.add('hide'); }, 1000);
-  $('#awExit').onclick = closeAward;
+  $('#awExit').onclick = awAskClose; // EXIT 도 Esc 처럼 확인 — 진행 중 실수로 누르면 무대가 닫혀 버림
+  if (!AW.locked) { AW.sync = 'loading'; awPoll(); } awSyncDraw();
 }
-const AW_STEP_KEY = 'ax_award_step';
+// 최신 집계 받기 — 첫 수상 발표(예고 장면) 전까지 20초마다. 대표 점수 수정 · 평가 제외를 무대를 열어 둔 뒤에 해도 반영되게(10/19 검토)
+function awPoll() {
+  clearTimeout(AW.pollTimer); const seq = ++AW.pollSeq;
+  const live = () => AW.open && AW.pollSeq === seq && !AW.locked; // 닫았거나 · 고정됐거나 · 더 새 요청이 나갔으면 이 응답은 버림
+  awFetch().then(fresh => {
+    if (!live() || !fresh) return;
+    const t = AW.steps[AW.i] && AW.steps[AW.i].t; const before = AW.results;
+    AW.results = fresh; buildSteps(); AW.sync = 'ok';
+    if (t === 'stats' && (fresh.totalVoters !== before.totalVoters || fresh.list.length !== before.list.length || fresh.list.some((r, k) => !before.list[k] || before.list[k].status !== r.status))) drawStep(true); // 통계 장면이면 숫자만 새로
+  }).catch(() => { if (live()) AW.sync = 'fail'; })
+    .then(() => { if (live()) { awSyncDraw(); AW.pollTimer = setTimeout(awPoll, 20000); } });
+}
+// 왼쪽 아래 작은 글씨: 어느 시각 집계로 진행하는지(첫 수상 발표 뒤엔 숨김)
+function awSyncDraw() {
+  const el = $('#awSync'); if (!el) return;
+  const t = AW.open && AW.steps[AW.i] ? AW.steps[AW.i].t : '';
+  const pre = ['standby', 'intro', 'stats', 'rules'].includes(t);
+  const at = AW.results && AW.results.computedAt ? kstFmt(AW.results.computedAt, { month: undefined, day: undefined, weekday: undefined, second: '2-digit' }) : '';
+  if (!AW.open || (AW.locked && !pre)) { el.textContent = ''; el.className = 'aw-sync'; return; }
+  if (AW.locked) { el.className = 'aw-sync bad'; el.textContent = '집계 ' + at + ' 에 고정됨(새로고침으로 이어 감) · 최신으로 받으려면 Home'; return; } // 고정된 채 앞 장면에 있음 — 대기 화면으로 가면 다시 받음
+  el.className = 'aw-sync' + (AW.sync === 'fail' ? ' bad' : '');
+  el.textContent = AW.sync === 'fail' ? '최신 집계를 받지 못함 · ' + at + ' 집계로 진행 중 · 20초 뒤 다시 시도' : AW.sync === 'loading' ? '최신 집계 확인 중 · 지금 ' + at + ' 집계' : '집계 ' + at + ' 기준 · 첫 수상 발표 전까지 자동 갱신';
+}
+// 첫 수상 장면부터는 집계를 고정하고(새로고침해도 같은 순위로 이어 가게 저장), 갱신을 멈춤
+function awLock() {
+  if (AW.locked) return; AW.locked = true; clearTimeout(AW.pollTimer);
+  try { sessionStorage.setItem(AW_SNAP_KEY, JSON.stringify(AW.results)); } catch (e) { }
+  awSyncDraw();
+}
+function awUnlock() {
+  AW.locked = false; try { sessionStorage.removeItem(AW_SNAP_KEY); } catch (e) { }
+  AW.sync = 'loading'; awSyncDraw(); awPoll();
+}
+const AW_STEP_KEY = 'ax_award_step', AW_SNAP_KEY = 'ax_award_snap';
+// 리허설용 ?step=N 을 읽은 뒤 주소에서 지움(해시 · 다른 값은 그대로) — 시상식 · 개막 공통
+function dropStepParam() { try { const u = new URL(location.href); if (!u.searchParams.has('step')) return; u.searchParams.delete('step'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) { } }
 function awSaveStep() { try { sessionStorage.setItem(AW_STEP_KEY, String(AW.i)); } catch (e) { } }
-function awLoadStep() { try { return sessionStorage.getItem(AW_STEP_KEY) || 0; } catch (e) { return 0; } }
+function awLoadStep() { let i = 0, snap = null; try { i = Number(sessionStorage.getItem(AW_STEP_KEY)) || 0; snap = JSON.parse(sessionStorage.getItem(AW_SNAP_KEY) || 'null'); } catch (e) { } return { i, snap: snap && Array.isArray(snap.list) ? snap : null }; }
+function awClearProgress() { try { sessionStorage.removeItem(AW_STEP_KEY); sessionStorage.removeItem(AW_SNAP_KEY); } catch (e) { } }
 function awBeforeUnload(e) { e.preventDefault(); e.returnValue = '시상식이 진행 중입니다. 페이지를 떠나시겠습니까?'; return e.returnValue; }
-function closeAward() {
-  AW.open = false; clearTimeout(AW.timer); clearInterval(AW.hintTimer); $('#award').classList.remove('open'); document.body.style.overflow = '';
+function awRefocus() { setTimeout(() => { const a = document.activeElement; if (AW.open && a && a.tagName === 'IFRAME') { a.blur(); window.focus(); } }, 300); } // 누른 동작은 영상에 그대로 가고(재생 · 소리 켜기), 키만 시상식으로 돌아옴
+async function awWake() { try { if (AW.open && !document.hidden && navigator.wakeLock && !AW.wake) { const lock = await navigator.wakeLock.request('screen'); if (!AW.open) { lock.release().catch(() => { }); return; } AW.wake = lock; lock.addEventListener('release', () => { AW.wake = null; }); } } catch (e) { } }
+// 마지막 장면이 아니면 닫기 전에 묻는다 — EXIT 버튼과 Esc 공통
+function awAskClose() { if (AW.i < AW.steps.length - 1 && !confirm('시상식 화면을 닫을까요? 닫으면 진행 기록이 지워져 다음엔 대기 화면부터 시작합니다.')) return; closeAward(true); }
+// byUser: EXIT · Esc 로 닫음 → 진행 기록을 지움(같은 탭에서 리허설한 장면이 본행사에 이어지지 않게). 닫은 뒤엔 순위 · 점수가 없는 홈으로(프로젝터에 운영 관리 순위표 · 대표 점수표가 뜨지 않게)
+function closeAward(byUser) {
+  AW.open = false; AW.pollSeq++; clearTimeout(AW.timer); clearTimeout(AW.pollTimer); clearInterval(AW.hintTimer); $('#award').classList.remove('open'); document.body.style.overflow = '';
   window.removeEventListener('beforeunload', awBeforeUnload);
   document.removeEventListener('keydown', awKey); $('#award').removeEventListener('click', awClick);
+  window.removeEventListener('blur', awRefocus); document.removeEventListener('visibilitychange', awWake);
+  if (AW.wake) { AW.wake.release().catch(() => { }); AW.wake = null; }
+  if (byUser) awClearProgress();
+  awSyncDraw();
   if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
-  if (route() === 'award') location.hash = isAdmin() ? '#/admin' : isJudge() ? '#/ceo' : '#/';
+  AD.tab = 'config'; // 나중에 운영 관리를 열어도 순위 탭이 먼저 뜨지 않게
+  if (route() === 'award') location.hash = '#/';
 }
 function buildSteps() {
   const winners = AW.results.list.filter(r => r.rank && r.rank <= CONFIG.PRIZES.length).sort((a, b) => b.rank - a.rank); // 5 → 1
@@ -2095,14 +2163,16 @@ function buildSteps() {
   AW.steps = s;
 }
 function awKey(e) {
-  if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'PageDown') { e.preventDefault(); next(); }
+  if (e.repeat) return; // 키를 꾹 누르고 있어도 한 장만 넘어가게
+  if (e.key === 'F5') { e.preventDefault(); if (!document.fullscreenElement) toggleFS(); return; } // 클리커 '슬라이드쇼' 버튼(F5 · Shift+F5) — 새로고침 대신 전체화면 켜기
+  if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter' || e.key === 'PageDown') { e.preventDefault(); if (Date.now() >= AW.lockUntil) next(); }
   else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
   else if (e.key === 'f' || e.key === 'F') { toggleFS(); }
-  else if (e.key === 'Escape') { if (document.fullscreenElement) return; /* 전체화면에서 Esc 는 브라우저가 전체화면만 해제 */ if (confirm('시상식 화면을 닫을까요? (다시 열면 같은 장면에서 이어집니다)')) closeAward(); }
-  else if (e.key === 'Home') { if (AW.i > 0 && confirm('시상식을 처음 화면부터 다시 시작할까요?')) { clearTimeout(AW.timer); AW.i = 0; AW.mediaIdx = 0; drawStep(); } }
+  else if (e.key === 'Escape') { if (document.fullscreenElement) return; /* 전체화면에서 Esc 는 브라우저가 전체화면만 해제 */ awAskClose(); }
+  else if (e.key === 'Home') { if ((AW.i > 0 || AW.locked) && confirm('시상식을 처음 화면부터 다시 시작할까요? (최신 집계를 다시 받습니다)')) { clearTimeout(AW.timer); AW.i = 0; AW.mediaIdx = 0; drawStep(); } } // 대기 화면으로 가면 drawStep 이 고정을 풀고 다시 받음
   else if (/^[1-9]$/.test(e.key)) { awSetMedia(+e.key - 1); }
 }
-function awClick(e) { if (e.target.closest('iframe, a, button, .thumbs, .viewer, .impact-box')) return; next(); }
+function awClick(e) { if (e.target.closest('iframe, a, button, .thumbs, .viewer, .impact-box')) return; if (Date.now() >= AW.lockUntil) next(); }
 function toggleFS() { const el = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => { }); } // 아이폰 사파리는 requestFullscreen 이 없음
 function next() { clearTimeout(AW.timer); if (AW.i < AW.steps.length - 1) { AW.i++; AW.mediaIdx = 0; drawStep(); } }
 function prev() { clearTimeout(AW.timer); if (AW.i > 0) { AW.i--; if (AW.steps[AW.i].t === 'count') AW.i--; AW.mediaIdx = 0; drawStep(); } }
@@ -2115,6 +2185,9 @@ function setHorizon(hx, hy, ho, go) { const a = $('#award'); a.style.setProperty
 function drawStep(keep) {
   const st = AW.steps[AW.i]; const stage = $('#stage'); const total = AW.steps.length - 1;
   awSaveStep();
+  if (!AW.locked && !['standby', 'intro', 'stats', 'rules'].includes(st.t)) awLock(); // 첫 수상 장면부터 집계 고정
+  else if (AW.locked && st.t === 'standby') awUnlock(); // 대기 화면으로 돌아오면(← · Home) 처음부터 다시 하는 것 → 고정을 풀고 최신 집계를 다시 받음(리허설 뒤 대기 화면에 세워 둔 경우)
+  else awSyncDraw();
   $('#awProg').style.width = (AW.i / total * 100) + '%';
   const rankOrder = () => { const done = AW.steps.slice(0, AW.i + 1).filter(x => x.t === 'reveal').map(x => x.w.rank); const cur = st.w ? st.w.rank : null; return '<div class="rank-order">' + [5, 4, 3, 2, 1].map(r => '<span class="' + (r === cur && st.t === 'reveal' ? 'now' : done.includes(r) ? 'done' : '') + '">' + r + '</span>').join('') + '</div>'; };
   $('#awTop').textContent = st.w ? 'AWARD CEREMONY · ' + CONFIG.PRIZES[st.w.rank - 1].sub : 'AWARD CEREMONY';
@@ -2142,7 +2215,7 @@ function drawStep(keep) {
     let n = 3;
     const draw = () => { stage.innerHTML = '<div class="count" key="' + n + '">' + n + '</div>'; };
     draw();
-    const step = () => { n--; if (n <= 0) { next(); return; } draw(); AW.timer = setTimeout(step, 1000); };
+    const step = () => { n--; if (n <= 0) { AW.lockUntil = Date.now() + 1000; next(); return; } draw(); AW.timer = setTimeout(step, 1000); }; // 저절로 공개된 직후 1초는 '다음'을 막음 — 3·2·1 끝에 누르면 공개 장면을 건너뛰던 것
     AW.timer = setTimeout(step, 1000);
   } else if (st.t === 'reveal') {
     setHorizon(1.6, '0px', .35, .9);
