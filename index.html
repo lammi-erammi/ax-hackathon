@@ -1491,9 +1491,19 @@ function renderImpact() {
     + '</section>';
   if (e) { bindDrop(UL.imp); drawFiles(UL.imp); }
 }
-function startImpact() {
+async function startImpact() {
   const id = $('#imName').value; const pin = $('#imPin').value; const e = S.st.entries.find(x => x.id === id);
   if (!e) return; if (!/^\d{4}$/.test(pin) && !isAdmin()) return toast('PIN 4자리를 입력하세요', 'bad');
+  // 고른 출품작의 PIN 이 맞는지 서버에서 먼저 확인(10/22) — 전엔 확인 없이 열려서 남의 이름 + 내 PIN 으로도 기입 화면이 열렸음
+  if (!isAdmin()) {
+    showWait('본인 확인 중', 6000);
+    try { await API.post({ action: 'check_pin', entryId: id, pin }); await hideWait(true); }
+    catch (err) {
+      await hideWait(false);
+      if (!/알 수 없는 action/.test(err.message)) return toast(err.message, 'bad'); // 서버가 아직 옛 판이면 예전처럼 열고, 저장할 때 서버가 PIN 을 확인
+    }
+    if (route() !== 'impact' || IM.entry) return; // 확인을 기다리는 사이 다른 화면으로 갔으면 열지 않음
+  }
   IM.entry = e; IM.pin = pin;
   UL.imp.files = [...(e.impactFiles || [])].map(f => Object.assign({ done: true, pct: 1 }, f));
   render();
