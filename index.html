@@ -795,10 +795,10 @@ function computeResultsLocal(entries, votes, scores) {
   let r = 0; list.forEach(e => e.rank = e.status === 'excluded' ? null : ++r);
   return { list, maxVotes, totalVoters: votes.length, prizeCount: CONFIG.PRIZES.length, computedAt: Date.now() };
 }
-// 구성원에게 보이는 결과(결과 공개 때) — 순위만, 대표 점수 · 득표 · 합계는 뺌(서버 publicResults 와 같게)
+// 구성원에게 보이는 결과(결과 공개 때) — 수상자 순위만, 대표 점수 · 득표 · 합계와 6등 이하는 뺌(서버 publicResults 와 같게)
 function publicResultsLocal(R) {
   if (!R) return R;
-  return { list: R.list.map(e => { const o = Object.assign({}, e); ['ceoScore', 'votes', 'ceoPart', 'votePart', 'total'].forEach(k => delete o[k]); return o; }), totalVoters: R.totalVoters, prizeCount: R.prizeCount, computedAt: R.computedAt };
+  return { list: R.list.filter(e => e.rank && e.rank <= CONFIG.PRIZES.length).map(e => { const o = Object.assign({}, e); ['ceoScore', 'votes', 'ceoPart', 'votePart', 'total'].forEach(k => delete o[k]); return o; }), totalVoters: R.totalVoters, prizeCount: R.prizeCount, computedAt: R.computedAt };
 }
 
 /* ═══════════════ 대기 화면 (진행 막대 + 한 줄 멘트) ═══════════════
@@ -1177,6 +1177,8 @@ function renderHome() {
   const live = ['submit', 'impact', 'vote', 'award'].includes(p);
   const entries = [...st.entries].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const rankOf = {}; if (st.results && st.config.resultsPublic) st.results.list.forEach(r => rankOf[r.id] = r.rank);
+  // 결과 공개를 켜면 히어로 바로 아래에 수상자 5명(1등부터) — 카드는 전시회장과 같은 모양, 누르면 작품 창(10/27 예람님)
+  const winners = Object.keys(rankOf).filter(id => rankOf[id] && rankOf[id] <= CONFIG.PRIZES.length).map(id => ({ e: st.entries.find(x => x.id === id), rank: rankOf[id] })).filter(w => w.e).sort((a, b) => a.rank - b.rank);
   const acts = [
     { n: '01', t: '산출물 제출', cta: '산출물 제출하기', href: '#/submit', start: 'submitStart', end: 'submitEnd', when: '10.21 (수) 09:00 – 18:00', s: 1, doneLabel: '제출 마감', doneHref: '#/gallery', doneCta: '전시회장 보기' },
     { n: '02', t: '비즈니스 임팩트 기재', cta: '임팩트 기재하기', href: '#/impact', start: 'impactStart', end: 'voteStart', when: '10.22 (목) 21:00 – 22:00', s: 2, doneLabel: '기재 마감' },
@@ -1200,6 +1202,7 @@ function renderHome() {
     + '<p class="lead" style="margin:26px 0 0;max-width:720px">' + esc(CONFIG.EVENT.mission) + '<br><span class="mute" style="font-size:15px">10.21 (수) 09:00 – 18:00 · ' + esc(CONFIG.EVENT.place) + ' · 개인전</span></p>'
     + (ov ? '<p class="hint" style="margin-top:14px;color:var(--warn)"><i class="fa-solid fa-triangle-exclamation"></i> 단계를 수동으로 설정 중입니다 (' + esc(m.label) + ') — 운영 관리 › 설정에서 자동으로 되돌릴 수 있습니다</p>' : '') + '</div></section>'
     + (st.config.notice ? '<div class="notice" style="margin-bottom:28px"><i class="fa-solid fa-bullhorn"></i><div>' + esc(st.config.notice) + '</div></div>' : '')
+    + (winners.length ? '<section style="margin-bottom:40px"><p class="eyebrow" style="margin-bottom:14px">Winners</p><h2 class="h2" style="margin:0 0 26px">AX 해커톤 2026 수상작</h2><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(290px,100%),1fr));gap:22px 16px">' + winners.map(w => entryCard(w.e, { onclick: "openEntryModal('" + w.e.id + "')", rank: w.rank })).join('') + '</div></section>' : '')
     + '<section><p class="eyebrow" style="margin-bottom:14px">What to do</p><div class="acts">' + acts.map(actHTML).join('') + '</div></section>'
     // 출품작 목록은 홈에 두지 않고 상단 메뉴 "전시회장"(#/gallery) 에서 본다 — 홈에는 바로가기 한 줄만
     + '<section style="margin-top:28px"><a class="card" href="#/gallery" style="display:flex;align-items:center;gap:18px;padding:20px 24px;transition:.18s" onmouseover="this.style.borderColor=\'var(--line3)\'" onmouseout="this.style.borderColor=\'var(--line)\'"><i class="fa-solid fa-images" style="font-size:22px;color:var(--acc)"></i><div style="flex:1"><div style="font-weight:800;font-size:16px;letter-spacing:-.01em">전시회장</div><div class="mute" style="font-size:13px">지금까지 출품된 작품 <b style="color:var(--fg)">' + entries.length + '</b>개 · 투표 참여 ' + st.stats.votes + '명</div></div><span class="btn ghost sm">둘러보기 <i class="fa-solid fa-arrow-right"></i></span></a></section>'
